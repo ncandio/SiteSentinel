@@ -9,7 +9,11 @@ import logging
 import threading
 import time
 from typing import Any, Callable, Dict, List, Optional
-import uvloop
+try:
+    import uvloop
+    UVLOOP_AVAILABLE = True
+except ImportError:
+    UVLOOP_AVAILABLE = False
 from concurrent.futures import ThreadPoolExecutor
 
 # Import Dask components for distributed computing
@@ -105,7 +109,10 @@ class Scheduler:
             use_dask: Whether to use Dask for task execution
             dask_client: An existing Dask Client to use, or None to create a new one
         """
-        self.loop = uvloop.new_event_loop()
+        if UVLOOP_AVAILABLE:
+            self.loop = uvloop.new_event_loop()
+        else:
+            self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
         self.tasks: Dict[int, Task] = {}
         self.task_counter = 0
